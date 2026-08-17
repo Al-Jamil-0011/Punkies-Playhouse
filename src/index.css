@@ -1,0 +1,20 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Inter:wght@400;500;600;700&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Nunito', sans-serif;
+  --color-surface: #f8fafc;
+  --color-border: #e2e8f0;
+  --color-muted: #64748b;
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  font-family: 'Nunito', sans-serif;
+}
+
+::-webkit-scrollbar { display: none; }
+scrollbar-width: none;
