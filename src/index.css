@@ -10,6 +10,7 @@
 
 * {
   -webkit-font-smoothing: antialiased;
+  scrollbar-width: none;
 }
 
 body {
@@ -17,4 +18,3 @@ body {
 }
 
 ::-webkit-scrollbar { display: none; }
-scrollbar-width: none;
