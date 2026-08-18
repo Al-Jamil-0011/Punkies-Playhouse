@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Layout, Menu, Typography, Card, Row, Col, Statistic, Table, Button, Input as AntInput, Modal, Form, Select, Upload, Popconfirm, message, Space, Tag } from 'antd';
 import { UploadOutlined, EditOutlined, DeleteOutlined, PlusOutlined, PictureOutlined } from '@ant-design/icons';
-import defaiLogo from './imports/DEFai_Logo.png'
+const defaiLogo = "https://via.placeholder.com/150?text=DEFai";
 import playhouseKidsLogo from './imports/Playhouse_Kids_Logo.png'
 import squadiesPoster from './imports/Squadies__2___1_.png'
 import huggaBunchLogo from './imports/hugga_bunch_logo_FINAL.png'
@@ -272,7 +272,7 @@ function BrandsSection() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm();
   const [editingId, setEditingId] = useState<BrandId | null>(null);
-  
+
   const [names, setNames] = useState<Record<BrandId, string>>(
     Object.fromEntries(BRANDS.map(b => [b.id, b.name])) as Record<BrandId, string>
   );
@@ -402,8 +402,8 @@ function ContactSubmissionsSection({ submissions, setSubmissions }: { submission
       title: 'Actions',
       key: 'actions',
       render: (_: any, record: ContactSubmission) => (
-        <Button 
-          type="link" 
+        <Button
+          type="link"
           onClick={(e) => { e.stopPropagation(); markRead(record.id, !record.unread); }}
         >
           {record.unread ? 'Mark read' : 'Mark unread'}
@@ -481,11 +481,11 @@ function ContactSubmissionsSection({ submissions, setSubmissions }: { submission
                   </div>
                   <Button type="text" icon={<span style={{ fontSize: 18 }}>×</span>} onClick={() => setSelected(null)} />
                 </div>
-                
+
                 <div style={{ background: '#FAF0FF', padding: 16, borderRadius: 12, border: '1.5px solid #F3E8FF', marginBottom: 16 }}>
                   {selected.message}
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <Typography.Text type="secondary" style={{ fontSize: 12 }}>Received: {selected.date}</Typography.Text>
                   <Button type="link" onClick={() => markRead(selected.id, !selected.unread)}>
@@ -659,10 +659,10 @@ function AppSettingsSection() {
             </Form.Item>
           </Card>
           <div className="flex justify-end">
-            <Button 
-              type="primary" 
-              size="large" 
-              onClick={save} 
+            <Button
+              type="primary"
+              size="large"
+              onClick={save}
               style={{ background: saved ? '#10B981' : 'linear-gradient(135deg, #FF3D8A 0%, #A855F7 100%)', border: 'none', borderRadius: 12 }}
             >
               {saved ? '✅ Saved!' : '💾 Save Changes'}
@@ -694,17 +694,17 @@ export default function AdminDashboard() {
   return (
     <div className="flex h-screen overflow-hidden" style={{ fontFamily: F_BODY, background: '#FAF7FF' }}>
       {/* Sidebar */}
-      <aside className="w-56 flex-shrink-0 flex flex-col" style={{ background: '#1A1030', height: '100vh' }}>
+      <aside className="w-72 flex-shrink-0 flex flex-col" style={{ background: '#1A1030', height: '100vh' }}>
         {/* Logo */}
         <div className="px-5 py-5 flex items-center gap-3 border-b border-white/10">
-          <div className="w-9 h-9 rounded-xl overflow-hidden flex-shrink-0">
+          <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
             <img src={punkiesLogo} alt="Punkies Playhouse" className="w-full h-full object-cover" />
           </div>
           <div>
-            <p className="text-xs font-bold leading-tight text-white" style={{ fontFamily: F_HEAD, fontSize: 13 }}>Punkies Playhouse</p>
-            <div className="h-5 mt-0.5">
+            <p className="text-xs font-bold leading-tight text-white" style={{ fontFamily: F_HEAD, fontSize: 18 }}>Punkies Playhouse</p>
+            {/* <div className="h-5 mt-0.5">
               <img src={defaiLogo} alt="DEFai" className="h-full w-auto object-contain" />
-            </div>
+            </div> */}
           </div>
         </div>
 
