@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from 'react'
-import { Layout, Menu, Typography, Card, Row, Col, Statistic, Table, Button, Input as AntInput, Modal, Form, Select, Upload, Popconfirm, message, Space, Tag } from 'antd';
-import { UploadOutlined, EditOutlined, DeleteOutlined, PlusOutlined, PictureOutlined } from '@ant-design/icons';
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { Layout, Menu, Typography, Card, Row, Col, Statistic, Table, Button, Input as AntInput, Modal, Form, Select, Upload, Popconfirm, message, Space, Tag, Grid } from 'antd';
+import { UploadOutlined, EditOutlined, DeleteOutlined, PlusOutlined, PictureOutlined, MenuOutlined, CloseOutlined } from '@ant-design/icons';
 const defaiLogo = "https://via.placeholder.com/150?text=DEFai";
 import playhouseKidsLogo from './imports/Playhouse_Kids_Logo.png'
 import squadiesPoster from './imports/Squadies__2___1_.png'
@@ -19,6 +19,24 @@ interface Brand { id: BrandId; name: string; logo: string; accent: string; accen
 interface Post { id: string; brandId: BrandId; title: string; body: string; date: string; published: boolean }
 interface ContactSubmission { id: string; name: string; email: string; message: string; date: string; unread: boolean; color: string }
 interface Game { id: string; name: string; emoji: string; url: string }
+
+// ─── Responsive Hook ──────────────────────────────────────────────────────────
+function useBreakpoint() {
+  const [width, setWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200)
+
+  useEffect(() => {
+    const handleResize = () => setWidth(window.innerWidth)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  return {
+    isMobile: width < 640,     // sm breakpoint
+    isTablet: width >= 640 && width < 1024,  // md breakpoint
+    isDesktop: width >= 1024,  // lg breakpoint
+    width,
+  }
+}
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 const BRANDS: Brand[] = [
@@ -69,14 +87,15 @@ function DashboardSection({ posts, submissions }: { posts: Post[]; submissions: 
     <div>
       <SectionTitle>Dashboard 👋</SectionTitle>
 
-      <Row gutter={16} style={{ marginBottom: 32 }}>
-        <Col span={12}>
+      {/* Stats Row */}
+      <Row gutter={[16, 16]} style={{ marginBottom: 32 }}>
+        <Col xs={24} sm={12}>
           <Card bordered={false} style={{ borderRadius: 16, boxShadow: '0 2px 16px rgba(168,85,247,0.08)', border: '1.5px solid #A855F722' }}>
             <Statistic title={<span style={{ color: '#9D6FBB', fontFamily: F_BODY, textTransform: 'uppercase', fontSize: 12, fontWeight: 600 }}>Posts this month</span>} value={thisMonth} prefix="📣" valueStyle={{ fontFamily: F_HEAD, color: '#1a1a1a' }} />
             <div style={{ color: '#9CA3AF', fontSize: 12, marginTop: 4 }}>across all brands</div>
           </Card>
         </Col>
-        <Col span={12}>
+        <Col xs={24} sm={12}>
           <Card bordered={false} style={{ borderRadius: 16, boxShadow: '0 2px 16px rgba(168,85,247,0.08)', border: '1.5px solid #FF3D8A22' }}>
             <Statistic title={<span style={{ color: '#9D6FBB', fontFamily: F_BODY, textTransform: 'uppercase', fontSize: 12, fontWeight: 600 }}>New Submissions</span>} value={unreadMsgs} prefix="📬" valueStyle={{ fontFamily: F_HEAD, color: '#1a1a1a' }} />
             <div style={{ color: '#9CA3AF', fontSize: 12, marginTop: 4 }}>need your review</div>
@@ -84,8 +103,9 @@ function DashboardSection({ posts, submissions }: { posts: Post[]; submissions: 
         </Col>
       </Row>
 
-      <Row gutter={24}>
-        <Col span={12}>
+      {/* Latest Posts & Recent Submissions */}
+      <Row gutter={[24, 24]}>
+        <Col xs={24} lg={12}>
           <Typography.Text strong style={{ color: '#9D6FBB', textTransform: 'uppercase', fontSize: 12, letterSpacing: 1, display: 'block', marginBottom: 12 }}>Latest Posts</Typography.Text>
           <div className="flex flex-col gap-3">
             {posts.slice(0, 5).map(post => {
@@ -110,7 +130,7 @@ function DashboardSection({ posts, submissions }: { posts: Post[]; submissions: 
           </div>
         </Col>
 
-        <Col span={12}>
+        <Col xs={24} lg={12}>
           <Typography.Text strong style={{ color: '#9D6FBB', textTransform: 'uppercase', fontSize: 12, letterSpacing: 1, display: 'block', marginBottom: 12 }}>Recent Submissions</Typography.Text>
           <div className="flex flex-col gap-3">
             {submissions.slice(0, 5).map(sub => (
@@ -139,6 +159,7 @@ function PostsSection({ posts, setPosts }: { posts: Post[]; setPosts: (p: Post[]
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm();
   const [editId, setEditId] = useState<string | null>(null);
+  const { isMobile } = useBreakpoint();
 
   const openModal = (p?: Post) => {
     if (p) {
@@ -175,6 +196,44 @@ function PostsSection({ posts, setPosts }: { posts: Post[]; setPosts: (p: Post[]
     });
   };
 
+  // ─── Mobile Card Layout ──────────────────────────────────────
+  const renderMobileCards = () => (
+    <div className="flex flex-col gap-3">
+      {posts.map(post => {
+        const b = BRAND_MAP[post.brandId];
+        return (
+          <Card key={post.id} bordered={false} style={{ borderRadius: 16, border: `1.5px solid ${b.accent}22` }}>
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center p-1" style={{ background: b.bgTint }}>
+                <img src={b.logo} alt={b.name} className="w-full h-full object-contain" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <span style={{ color: b.accent, fontWeight: 600, fontSize: 12 }}>{b.name}</span>
+                  <Tag color={post.published ? 'green' : 'orange'} style={{ border: 0, margin: 0, fontSize: 11 }}>
+                    {post.published ? 'Live' : 'Draft'}
+                  </Tag>
+                </div>
+                <p className="text-sm font-semibold mb-1" style={{ color: '#1a1a1a', lineHeight: 1.4 }}>{post.title}</p>
+                <p className="text-xs mb-2" style={{ color: '#9CA3AF' }}>{post.date}</p>
+                <div className="flex gap-2">
+                  <Button size="small" type="text" icon={<EditOutlined />} onClick={() => openModal(post)}>Edit</Button>
+                  <Popconfirm title="Delete this post?" onConfirm={() => {
+                    setPosts(posts.filter(p => p.id !== post.id));
+                    message.success('Post deleted');
+                  }}>
+                    <Button size="small" type="text" danger icon={<DeleteOutlined />}>Delete</Button>
+                  </Popconfirm>
+                </div>
+              </div>
+            </div>
+          </Card>
+        );
+      })}
+    </div>
+  );
+
+  // ─── Desktop Table Layout ──────────────────────────────────────
   const columns = [
     {
       title: 'Brand',
@@ -221,16 +280,22 @@ function PostsSection({ posts, setPosts }: { posts: Post[]; setPosts: (p: Post[]
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-between mb-5 gap-3 flex-wrap">
         <SectionTitle>Updates & Posts 📣</SectionTitle>
         <Button type="primary" icon={<PlusOutlined />} onClick={() => openModal()} style={{ background: 'linear-gradient(135deg, #FF3D8A 0%, #A855F7 100%)', border: 'none' }}>
           Add Post
         </Button>
       </div>
 
-      <Card bordered={false} style={{ borderRadius: 16, border: '1.5px solid #E9D5FF' }} bodyStyle={{ padding: 0 }}>
-        <Table dataSource={posts} columns={columns} rowKey="id" pagination={false} />
-      </Card>
+      {isMobile ? (
+        renderMobileCards()
+      ) : (
+        <Card bordered={false} style={{ borderRadius: 16, border: '1.5px solid #E9D5FF' }} bodyStyle={{ padding: 0 }}>
+          <div className="admin-table-scroll">
+            <Table dataSource={posts} columns={columns} rowKey="id" pagination={false} scroll={{ x: 700 }} />
+          </div>
+        </Card>
+      )}
 
       <Modal
         title={editId ? "Edit Post" : "Create New Post"}
@@ -238,6 +303,8 @@ function PostsSection({ posts, setPosts }: { posts: Post[]; setPosts: (p: Post[]
         onOk={handleSave}
         onCancel={() => setIsModalOpen(false)}
         okText={editId ? "Save Changes" : "Publish"}
+        width={isMobile ? '95vw' : 520}
+        centered={isMobile}
       >
         <Form form={form} layout="vertical" style={{ marginTop: 20 }}>
           <Form.Item name="brandId" label="Brand" rules={[{ required: true }]}>
@@ -272,6 +339,7 @@ function BrandsSection() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm();
   const [editingId, setEditingId] = useState<BrandId | null>(null);
+  const { isMobile } = useBreakpoint();
 
   const [names, setNames] = useState<Record<BrandId, string>>(
     Object.fromEntries(BRANDS.map(b => [b.id, b.name])) as Record<BrandId, string>
@@ -305,7 +373,7 @@ function BrandsSection() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-between mb-5 gap-3 flex-wrap">
         <SectionTitle>Brands/Items 🏷️</SectionTitle>
         <Button type="primary" icon={<PlusOutlined />} onClick={() => openModal()} style={{ background: 'linear-gradient(135deg, #FF3D8A 0%, #A855F7 100%)', border: 'none' }}>
           Add Item
@@ -314,18 +382,18 @@ function BrandsSection() {
 
       <Row gutter={[20, 20]}>
         {BRANDS.map(b => (
-          <Col span={12} key={b.id}>
+          <Col xs={24} sm={12} key={b.id}>
             <Card bordered={false} style={{ borderRadius: 16, boxShadow: `0 2px 16px ${b.accent}18`, border: `1.5px solid ${b.accent}22` }}>
               <div className="w-full h-32 rounded-xl overflow-hidden flex items-center justify-center mb-4" style={{ background: b.bgTint }}>
                 <img src={b.logo} alt={b.name} className="max-h-full max-w-full object-contain p-4" />
               </div>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
                 <div>
                   <Title level={5} style={{ fontFamily: F_HEAD, margin: 0 }}>{names[b.id]}</Title>
                   <Tag color={b.accent} style={{ marginTop: 8, border: 0 }}>Active</Tag>
                 </div>
                 <Space>
-                  <Button type="primary" ghost icon={<EditOutlined />} onClick={() => openModal(b)}>Edit</Button>
+                  <Button type="primary" ghost icon={<EditOutlined />} onClick={() => openModal(b)}>{isMobile ? '' : 'Edit'}</Button>
                   <Popconfirm title="Delete this brand?" onConfirm={() => message.info('Delete functionality mocked')}>
                     <Button type="text" danger icon={<DeleteOutlined />} />
                   </Popconfirm>
@@ -342,6 +410,8 @@ function BrandsSection() {
         onOk={handleSave}
         onCancel={() => setIsModalOpen(false)}
         okText="Save"
+        width={isMobile ? '95vw' : 520}
+        centered={isMobile}
       >
         <Form form={form} layout="vertical" style={{ marginTop: 20 }}>
           <Form.Item name="name" label="Brand/Item Name" rules={[{ required: true }]}>
@@ -369,6 +439,7 @@ function ContactSubmissionsSection({ submissions, setSubmissions }: { submission
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<ContactSubmission | null>(null)
   const [forwardEmail, setForwardEmail] = useState('admin@punkiesplayhouse.com')
+  const { isMobile, isTablet } = useBreakpoint();
 
   const markRead = (id: string, readState: boolean) => {
     setSubmissions(submissions.map(s => s.id === id ? { ...s, unread: !readState } : s))
@@ -384,6 +455,47 @@ function ContactSubmissionsSection({ submissions, setSubmissions }: { submission
 
   const unreadCount = submissions.filter(s => s.unread).length
 
+  // ─── Mobile Card Layout for Submissions ────────────────
+  const renderMobileSubmissions = () => (
+    <div className="flex flex-col gap-3">
+      {filtered.map(sub => (
+        <Card
+          key={sub.id}
+          bordered={false}
+          style={{
+            borderRadius: 16,
+            border: sub.unread ? '1.5px solid #A855F7' : '1.5px solid #F3E8FF',
+            background: sub.unread ? '#FBF7FF' : '#fff',
+            cursor: 'pointer',
+          }}
+          bodyStyle={{ padding: 16 }}
+          onClick={() => {
+            setSelected(sub);
+            if (sub.unread) markRead(sub.id, true);
+          }}
+        >
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0" style={{ background: sub.color }}>
+              {sub.name.charAt(0)}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <span className="font-semibold text-sm" style={{ color: '#1a1a1a' }}>{sub.name}</span>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {sub.unread && <div className="w-2 h-2 rounded-full" style={{ background: '#FF3D8A' }} />}
+                  <span className="text-xs" style={{ color: '#9CA3AF' }}>{sub.date}</span>
+                </div>
+              </div>
+              <p className="text-xs mb-1" style={{ color: '#6B7280' }}>{sub.email}</p>
+              <p className="text-sm mb-0" style={{ color: '#4B5563', lineHeight: 1.5 }}>{sub.message}</p>
+            </div>
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
+
+  // ─── Desktop Table Layout ──────────────────────────────────────
   const columns = [
     {
       title: 'Name',
@@ -412,9 +524,11 @@ function ContactSubmissionsSection({ submissions, setSubmissions }: { submission
     }
   ];
 
+  const showSidePanel = !isMobile && !isTablet;
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
         <div>
           <SectionTitle>Contact Submissions 📬</SectionTitle>
           <p className="text-sm font-medium" style={{ color: '#9D6FBB', fontFamily: F_BODY, marginTop: '-12px' }}>
@@ -423,8 +537,27 @@ function ContactSubmissionsSection({ submissions, setSubmissions }: { submission
         </div>
       </div>
 
-      <Row gutter={24}>
-        <Col span={16}>
+      {/* Forwarding email card — shown at top on mobile/tablet */}
+      {!showSidePanel && (
+        <Card bordered={false} style={{ borderRadius: 16, border: '1.5px solid #E9D5FF', marginBottom: 16 }}>
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xl">📧</span>
+            <Title level={5} style={{ fontFamily: F_HEAD, color: '#6D28D9', margin: 0 }}>Forwarding Email</Title>
+          </div>
+          <p className="text-xs font-medium mb-3" style={{ color: '#9D6FBB', fontFamily: F_BODY }}>
+            Submissions are auto-forwarded to this address.
+          </p>
+          <div className="flex gap-2 flex-wrap">
+            <AntInput value={forwardEmail} onChange={e => setForwardEmail(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
+            <Button type="primary" onClick={() => message.success('Email saved!')}>
+              Save Email
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      <Row gutter={[24, 24]}>
+        <Col xs={24} lg={16}>
           <AntInput.Search
             placeholder="Search by name or email..."
             value={search}
@@ -432,71 +565,115 @@ function ContactSubmissionsSection({ submissions, setSubmissions }: { submission
             style={{ marginBottom: 16 }}
             size="large"
           />
-          <Card bordered={false} style={{ borderRadius: 16, border: '1.5px solid #E9D5FF' }} bodyStyle={{ padding: 0 }}>
-            <Table
-              dataSource={filtered}
-              columns={columns}
-              rowKey="id"
-              pagination={{ pageSize: 6 }}
-              onRow={(record) => ({
-                onClick: () => {
-                  setSelected(record);
-                  if (record.unread) markRead(record.id, true);
-                },
-                style: { cursor: 'pointer', background: record.unread ? '#FBF7FF' : '#fff' }
-              })}
-            />
-          </Card>
-        </Col>
 
-        <Col span={8}>
-          <Space direction="vertical" style={{ width: '100%' }} size="large">
-            <Card bordered={false} style={{ borderRadius: 16, border: '1.5px solid #E9D5FF' }}>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-xl">📧</span>
-                <Title level={5} style={{ fontFamily: F_HEAD, color: '#6D28D9', margin: 0 }}>Forwarding Email</Title>
+          {isMobile ? (
+            renderMobileSubmissions()
+          ) : (
+            <Card bordered={false} style={{ borderRadius: 16, border: '1.5px solid #E9D5FF' }} bodyStyle={{ padding: 0 }}>
+              <div className="admin-table-scroll">
+                <Table
+                  dataSource={filtered}
+                  columns={columns}
+                  rowKey="id"
+                  pagination={{ pageSize: 6 }}
+                  scroll={{ x: 650 }}
+                  onRow={(record) => ({
+                    onClick: () => {
+                      setSelected(record);
+                      if (record.unread) markRead(record.id, true);
+                    },
+                    style: { cursor: 'pointer', background: record.unread ? '#FBF7FF' : '#fff' }
+                  })}
+                />
               </div>
-              <p className="text-xs font-medium mb-3" style={{ color: '#9D6FBB', fontFamily: F_BODY }}>
-                Submissions are auto-forwarded to this address.
-              </p>
-              <Space direction="vertical" style={{ width: '100%' }}>
-                <AntInput value={forwardEmail} onChange={e => setForwardEmail(e.target.value)} />
-                <Button type="primary" onClick={() => message.success('Email saved!')}>
-                  Save Email
-                </Button>
-              </Space>
             </Card>
-
-            {selected && (
-              <Card bordered={false} style={{ borderRadius: 16, border: '1.5px solid #A855F7', boxShadow: '0 8px 30px rgba(168,85,247,0.15)' }}>
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-lg font-bold flex-shrink-0" style={{ background: selected.color }}>
-                      {selected.name.charAt(0)}
-                    </div>
-                    <div className="min-w-0">
-                      <Title level={5} style={{ margin: 0 }}>{selected.name}</Title>
-                      <Typography.Text type="secondary">{selected.email}</Typography.Text>
-                    </div>
-                  </div>
-                  <Button type="text" icon={<span style={{ fontSize: 18 }}>×</span>} onClick={() => setSelected(null)} />
-                </div>
-
-                <div style={{ background: '#FAF0FF', padding: 16, borderRadius: 12, border: '1.5px solid #F3E8FF', marginBottom: 16 }}>
-                  {selected.message}
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>Received: {selected.date}</Typography.Text>
-                  <Button type="link" onClick={() => markRead(selected.id, !selected.unread)}>
-                    {selected.unread ? 'Mark read' : 'Mark unread'}
-                  </Button>
-                </div>
-              </Card>
-            )}
-          </Space>
+          )}
         </Col>
+
+        {/* Side panel — only on desktop */}
+        {showSidePanel && (
+          <Col lg={8}>
+            <Space direction="vertical" style={{ width: '100%' }} size="large">
+              <Card bordered={false} style={{ borderRadius: 16, border: '1.5px solid #E9D5FF' }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xl">📧</span>
+                  <Title level={5} style={{ fontFamily: F_HEAD, color: '#6D28D9', margin: 0 }}>Forwarding Email</Title>
+                </div>
+                <p className="text-xs font-medium mb-3" style={{ color: '#9D6FBB', fontFamily: F_BODY }}>
+                  Submissions are auto-forwarded to this address.
+                </p>
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <AntInput value={forwardEmail} onChange={e => setForwardEmail(e.target.value)} />
+                  <Button type="primary" onClick={() => message.success('Email saved!')}>
+                    Save Email
+                  </Button>
+                </Space>
+              </Card>
+
+              {selected && (
+                <Card bordered={false} style={{ borderRadius: 16, border: '1.5px solid #A855F7', boxShadow: '0 8px 30px rgba(168,85,247,0.15)' }}>
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-lg font-bold flex-shrink-0" style={{ background: selected.color }}>
+                        {selected.name.charAt(0)}
+                      </div>
+                      <div className="min-w-0">
+                        <Title level={5} style={{ margin: 0 }}>{selected.name}</Title>
+                        <Typography.Text type="secondary">{selected.email}</Typography.Text>
+                      </div>
+                    </div>
+                    <Button type="text" icon={<span style={{ fontSize: 18 }}>×</span>} onClick={() => setSelected(null)} />
+                  </div>
+
+                  <div style={{ background: '#FAF0FF', padding: 16, borderRadius: 12, border: '1.5px solid #F3E8FF', marginBottom: 16 }}>
+                    {selected.message}
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>Received: {selected.date}</Typography.Text>
+                    <Button type="link" onClick={() => markRead(selected.id, !selected.unread)}>
+                      {selected.unread ? 'Mark read' : 'Mark unread'}
+                    </Button>
+                  </div>
+                </Card>
+              )}
+            </Space>
+          </Col>
+        )}
       </Row>
+
+      {/* Selected message modal for mobile/tablet */}
+      {!showSidePanel && selected && (
+        <Modal
+          title={null}
+          open={!!selected}
+          onCancel={() => setSelected(null)}
+          footer={null}
+          width={isMobile ? '95vw' : 520}
+          centered
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 rounded-full flex items-center justify-center text-white text-lg font-bold flex-shrink-0" style={{ background: selected.color }}>
+              {selected.name.charAt(0)}
+            </div>
+            <div className="min-w-0">
+              <Title level={5} style={{ margin: 0 }}>{selected.name}</Title>
+              <Typography.Text type="secondary">{selected.email}</Typography.Text>
+            </div>
+          </div>
+
+          <div style={{ background: '#FAF0FF', padding: 16, borderRadius: 12, border: '1.5px solid #F3E8FF', marginBottom: 16 }}>
+            {selected.message}
+          </div>
+
+          <div className="flex items-center justify-between">
+            <Typography.Text type="secondary" style={{ fontSize: 12 }}>Received: {selected.date}</Typography.Text>
+            <Button type="link" onClick={() => markRead(selected.id, !selected.unread)}>
+              {selected.unread ? 'Mark read' : 'Mark unread'}
+            </Button>
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }
@@ -507,6 +684,7 @@ function GamesSection() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [form] = Form.useForm()
   const [editId, setEditId] = useState<string | null>(null)
+  const { isMobile } = useBreakpoint();
 
   const openModal = (g?: Game) => {
     if (g) {
@@ -532,6 +710,34 @@ function GamesSection() {
       setIsModalOpen(false);
     });
   };
+
+  // ─── Mobile Card Layout ──────────────────────────────────────
+  const renderMobileCards = () => (
+    <div className="flex flex-col gap-3">
+      {games.map(game => (
+        <Card key={game.id} bordered={false} style={{ borderRadius: 16, border: '1.5px solid #E9D5FF' }}>
+          <div className="flex items-center gap-3">
+            <div className="text-2xl w-12 h-12 flex items-center justify-center rounded-xl flex-shrink-0" style={{ background: '#F3E8FF' }}>
+              {game.emoji}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold mb-1" style={{ color: '#1a1a1a' }}>{game.name}</p>
+              <p className="text-xs truncate mb-2" style={{ color: '#9CA3AF' }}>{game.url}</p>
+              <div className="flex gap-2">
+                <Button size="small" type="text" icon={<EditOutlined />} onClick={() => openModal(game)}>Edit</Button>
+                <Popconfirm title="Delete this game?" onConfirm={() => {
+                  setGames(games.filter(x => x.id !== game.id));
+                  message.success('Game deleted');
+                }}>
+                  <Button size="small" type="text" danger icon={<DeleteOutlined />}>Delete</Button>
+                </Popconfirm>
+              </div>
+            </div>
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
 
   const columns = [
     {
@@ -565,16 +771,22 @@ function GamesSection() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-between mb-5 gap-3 flex-wrap">
         <SectionTitle>Mini Games 🎮</SectionTitle>
         <Button type="primary" icon={<PlusOutlined />} onClick={() => openModal()} style={{ background: 'linear-gradient(135deg, #FF3D8A 0%, #A855F7 100%)', border: 'none' }}>
           Add Game
         </Button>
       </div>
 
-      <Card bordered={false} style={{ borderRadius: 16, border: '1.5px solid #E9D5FF' }} bodyStyle={{ padding: 0 }}>
-        <Table dataSource={games} columns={columns} rowKey="id" pagination={false} />
-      </Card>
+      {isMobile ? (
+        renderMobileCards()
+      ) : (
+        <Card bordered={false} style={{ borderRadius: 16, border: '1.5px solid #E9D5FF' }} bodyStyle={{ padding: 0 }}>
+          <div className="admin-table-scroll">
+            <Table dataSource={games} columns={columns} rowKey="id" pagination={false} scroll={{ x: 550 }} />
+          </div>
+        </Card>
+      )}
 
       <Modal
         title={editId ? "Edit Game" : "Add Game"}
@@ -582,27 +794,29 @@ function GamesSection() {
         onOk={handleSave}
         onCancel={() => setIsModalOpen(false)}
         okText="Save"
+        width={isMobile ? '95vw' : 520}
+        centered={isMobile}
       >
         <Form form={form} layout="vertical" style={{ marginTop: 20 }}>
           <Row gutter={16}>
-            <Col span={12}>
+            <Col xs={24} sm={12}>
               <Form.Item name="name" label="Game Name" rules={[{ required: true }]}>
                 <AntInput placeholder="e.g. Squadies Rescue" />
               </Form.Item>
             </Col>
-            <Col span={12}>
+            <Col xs={24} sm={12}>
               <Form.Item name="url" label="Browser URL" rules={[{ required: true }]}>
                 <AntInput placeholder="https://..." />
               </Form.Item>
             </Col>
           </Row>
           <Row gutter={16}>
-            <Col span={8}>
+            <Col xs={12} sm={8}>
               <Form.Item name="emoji" label="Emoji Icon">
                 <AntInput style={{ fontSize: 20 }} />
               </Form.Item>
             </Col>
-            <Col span={16}>
+            <Col xs={12} sm={16}>
               <Form.Item label="Logo Upload">
                 <Upload accept="image/*" maxCount={1}>
                   <Button icon={<UploadOutlined />}>Upload Logo</Button>
@@ -690,84 +904,210 @@ export default function AdminDashboard() {
   const [posts, setPosts] = useState<Post[]>(INIT_POSTS)
   const [submissions, setSubmissions] = useState<ContactSubmission[]>(INIT_SUBMISSIONS)
   const [hoveredNav, setHoveredNav] = useState<NavSection | null>(null)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { isMobile, isTablet, isDesktop } = useBreakpoint()
   const totalUnread = submissions.filter(s => s.unread).length
+
+  const showMobileSidebar = !isDesktop // Show mobile sidebar for both mobile and tablet
+
+  // Close sidebar when navigating on mobile
+  const handleNavClick = useCallback((navId: NavSection) => {
+    setSection(navId)
+    if (showMobileSidebar) {
+      setSidebarOpen(false)
+    }
+  }, [showMobileSidebar])
+
+  // Close sidebar on escape key
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && sidebarOpen) {
+        setSidebarOpen(false)
+      }
+    }
+    window.addEventListener('keydown', handleEsc)
+    return () => window.removeEventListener('keydown', handleEsc)
+  }, [sidebarOpen])
+
+  // Prevent body scroll when sidebar is open on mobile
+  useEffect(() => {
+    if (showMobileSidebar && sidebarOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [showMobileSidebar, sidebarOpen])
+
+  // ─── Sidebar Content (shared between desktop & mobile) ────────
+  const sidebarContent = (
+    <>
+      {/* Logo */}
+      <div className="px-5 py-5 flex items-center gap-3 border-b border-white/10">
+        <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
+          <img src={punkiesLogo} alt="Punkies Playhouse" className="w-full h-full object-cover" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs leading-normal text-white" style={{ fontFamily: F_HEAD, fontSize: 18 }}>Punkies Playhouse</p>
+        </div>
+        {/* Close button for mobile sidebar */}
+        {showMobileSidebar && (
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+            style={{ border: 'none', background: 'transparent' }}
+            aria-label="Close sidebar"
+          >
+            <CloseOutlined style={{ fontSize: 16 }} />
+          </button>
+        )}
+      </div>
+
+      {/* Nav */}
+      <nav className="flex-1 px-3 py-4 flex flex-col gap-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+        {NAV_ITEMS.map(item => {
+          const isActive = section === item.id
+          const hasBadge = item.id === 'messages' && totalUnread > 0
+          return (
+            <button
+              key={item.id}
+              onClick={() => handleNavClick(item.id)}
+              onMouseEnter={() => setHoveredNav(item.id)}
+              onMouseLeave={() => setHoveredNav(null)}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left cursor-pointer transition-all"
+              style={{
+                background: (isActive || hoveredNav === item.id) ? 'linear-gradient(135deg, rgba(255,61,138,0.2) 0%, rgba(168,85,247,0.2) 100%)' : 'transparent',
+                border: (isActive || hoveredNav === item.id) ? '1px solid rgba(168,85,247,0.3)' : '1px solid transparent',
+              }}
+            >
+              <span className="text-lg w-7 text-center">{item.icon}</span>
+              <span className="flex-1 text-sm font-semibold" style={{ color: (isActive || hoveredNav === item.id) ? '#fff' : '#9D8FC0', fontFamily: F_BODY }}>{item.label}</span>
+              {hasBadge && (
+                <span className="w-5 h-5 rounded-full text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0" style={{ background: '#FF3D8A' }}>
+                  {totalUnread}
+                </span>
+              )}
+            </button>
+          )
+        })}
+      </nav>
+
+      {/* Bottom branding */}
+      <div className="px-5 py-4 border-t border-white/10">
+        <p className="text-[10px] font-medium" style={{ color: '#4B3F6A', fontFamily: F_BODY, lineHeight: 1.5 }}>
+          Admin Panel v1.0<br />Punkies Playhouse Alerts
+        </p>
+      </div>
+    </>
+  )
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ fontFamily: F_BODY, background: '#FAF7FF' }}>
-      {/* Sidebar */}
-      <aside className="w-72 flex-shrink-0 flex flex-col" style={{ background: '#1A1030', height: '100vh' }}>
-        {/* Logo */}
-        <div className="px-5 py-5 flex items-center gap-3 border-b border-white/10">
-          <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
-            <img src={punkiesLogo} alt="Punkies Playhouse" className="w-full h-full object-cover" />
-          </div>
-          <div>
-            <p className="text-xs leading-normal text-white" style={{ fontFamily: F_HEAD, fontSize: 18 }}>Punkies Playhouse</p>
-            {/* <div className="h-5 mt-0.5">
-              <img src={defaiLogo} alt="DEFai" className="h-full w-auto object-contain" />
-            </div> */}
-          </div>
-        </div>
 
-        {/* Nav */}
-        <nav className="flex-1 px-3 py-4 flex flex-col gap-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
-          {NAV_ITEMS.map(item => {
-            const isActive = section === item.id
-            const hasBadge = item.id === 'messages' && totalUnread > 0
-            return (
-              <button
-                key={item.id}
-                onClick={() => setSection(item.id)}
-                onMouseEnter={() => setHoveredNav(item.id)}
-                onMouseLeave={() => setHoveredNav(null)}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left cursor-pointer transition-all"
-                style={{
-                  background: (isActive || hoveredNav === item.id) ? 'linear-gradient(135deg, rgba(255,61,138,0.2) 0%, rgba(168,85,247,0.2) 100%)' : 'transparent',
-                  border: (isActive || hoveredNav === item.id) ? '1px solid rgba(168,85,247,0.3)' : '1px solid transparent',
-                }}
-              >
-                <span className="text-lg w-7 text-center">{item.icon}</span>
-                <span className="flex-1 text-sm font-semibold" style={{ color: (isActive || hoveredNav === item.id) ? '#fff' : '#9D8FC0', fontFamily: F_BODY }}>{item.label}</span>
-                {hasBadge && (
-                  <span className="w-5 h-5 rounded-full text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0" style={{ background: '#FF3D8A' }}>
-                    {totalUnread}
-                  </span>
-                )}
-              </button>
-            )
-          })}
-        </nav>
+      {/* ─── Desktop Sidebar (persistent) ──────────────────────── */}
+      {!showMobileSidebar && (
+        <aside className="w-72 flex-shrink-0 flex flex-col" style={{ background: '#1A1030', height: '100vh' }}>
+          {sidebarContent}
+        </aside>
+      )}
 
-        {/* Bottom branding */}
-        <div className="px-5 py-4 border-t border-white/10">
-          <p className="text-[10px] font-medium" style={{ color: '#4B3F6A', fontFamily: F_BODY, lineHeight: 1.5 }}>
-            Admin Panel v1.0<br />Punkies Playhouse Alerts
-          </p>
-        </div>
-      </aside>
+      {/* ─── Mobile/Tablet Sidebar (overlay) ───────────────────── */}
+      {showMobileSidebar && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="admin-sidebar-backdrop"
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 40,
+              background: 'rgba(0,0,0,0.5)',
+              backdropFilter: 'blur(4px)',
+              WebkitBackdropFilter: 'blur(4px)',
+              opacity: sidebarOpen ? 1 : 0,
+              pointerEvents: sidebarOpen ? 'auto' : 'none',
+              transition: 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
+            onClick={() => setSidebarOpen(false)}
+          />
+
+          {/* Drawer */}
+          <aside
+            className="flex flex-col"
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              bottom: 0,
+              width: isMobile ? '85vw' : '320px',
+              maxWidth: '320px',
+              zIndex: 50,
+              background: '#1A1030',
+              transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
+              transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              boxShadow: sidebarOpen ? '4px 0 30px rgba(0,0,0,0.3)' : 'none',
+            }}
+          >
+            {sidebarContent}
+          </aside>
+        </>
+      )}
 
       {/* Main content */}
       <main className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#E9D5FF transparent' }}>
         {/* Topbar */}
-        <header className="sticky top-0 z-10 flex items-center justify-between px-8 py-4 bg-white/80 backdrop-blur-md" style={{ borderBottom: '1.5px solid #F3E8FF', boxShadow: '0 2px 12px rgba(168,85,247,0.06)' }}>
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#9D6FBB', fontFamily: F_BODY }}>
-              {NAV_ITEMS.find(n => n.id === section)?.icon} {NAV_ITEMS.find(n => n.id === section)?.label}
-            </p>
-            <p className="text-lg font-bold" style={{ fontFamily: F_HEAD, color: '#1a1a1a', fontSize: 18 }}>Punkies Playhouse Admin</p>
-          </div>
+        <header
+          className="sticky top-0 z-10 flex items-center justify-between bg-white/80 backdrop-blur-md"
+          style={{
+            borderBottom: '1.5px solid #F3E8FF',
+            boxShadow: '0 2px 12px rgba(168,85,247,0.06)',
+            padding: isMobile ? '12px 16px' : isTablet ? '14px 24px' : '16px 32px',
+          }}
+        >
           <div className="flex items-center gap-3">
-            <span className="text-xs font-medium px-3 py-1.5 rounded-xl" style={{ background: '#F3E8FF', color: '#7B2FBE', fontFamily: F_BODY }}>
-              {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-            </span>
-            <div className="w-9 h-9 rounded-xl overflow-hidden" style={{ border: '2px solid #E9D5FF' }}>
+            {/* Hamburger button for mobile/tablet */}
+            {showMobileSidebar && (
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="w-10 h-10 flex items-center justify-center rounded-xl cursor-pointer transition-colors"
+                style={{
+                  background: '#F3E8FF',
+                  border: '1.5px solid #E9D5FF',
+                  color: '#7B2FBE',
+                  flexShrink: 0,
+                }}
+                aria-label="Open navigation menu"
+              >
+                <MenuOutlined style={{ fontSize: 18 }} />
+              </button>
+            )}
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-widest mb-0" style={{ color: '#9D6FBB', fontFamily: F_BODY }}>
+                {NAV_ITEMS.find(n => n.id === section)?.icon} {NAV_ITEMS.find(n => n.id === section)?.label}
+              </p>
+              {!isMobile && (
+                <p className="text-lg font-bold mb-0" style={{ fontFamily: F_HEAD, color: '#1a1a1a', fontSize: 18 }}>Punkies Playhouse Admin</p>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            {!isMobile && (
+              <span className="text-xs font-medium px-3 py-1.5 rounded-xl" style={{ background: '#F3E8FF', color: '#7B2FBE', fontFamily: F_BODY }}>
+                {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+              </span>
+            )}
+            <div className="w-9 h-9 rounded-xl overflow-hidden flex-shrink-0" style={{ border: '2px solid #E9D5FF' }}>
               <img src={punkiesLogo} alt="Admin" className="w-full h-full object-cover" />
             </div>
           </div>
         </header>
 
         {/* Content */}
-        <div className="px-8 py-7">
+        <div
+          style={{
+            padding: isMobile ? '20px 16px' : isTablet ? '24px 24px' : '28px 32px',
+          }}
+        >
           {section === 'dashboard' && <DashboardSection posts={posts} submissions={submissions} />}
           {section === 'posts' && <PostsSection posts={posts} setPosts={setPosts} />}
           {section === 'brands' && <BrandsSection />}

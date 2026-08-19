@@ -18,3 +18,128 @@ body {
 }
 
 ::-webkit-scrollbar { display: none; }
+
+/* ─── Admin Table Responsive Scroll ──────────────────────────────────────── */
+.admin-table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-table-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* ─── Ant Design Responsive Overrides ────────────────────────────────────── */
+
+/* Table: prevent text wrapping on small screens */
+@media (max-width: 1023px) {
+  .ant-table-thead > tr > th,
+  .ant-table-tbody > tr > td {
+    white-space: nowrap;
+    font-size: 13px;
+  }
+
+  .ant-table-thead > tr > th {
+    padding: 10px 12px !important;
+  }
+
+  .ant-table-tbody > tr > td {
+    padding: 10px 12px !important;
+  }
+}
+
+/* Mobile-specific overrides */
+@media (max-width: 639px) {
+  /* Compact modal styling */
+  .ant-modal .ant-modal-content {
+    border-radius: 16px;
+    padding: 16px;
+  }
+
+  .ant-modal .ant-modal-header {
+    padding: 0 0 12px 0;
+  }
+
+  .ant-modal .ant-modal-body {
+    padding: 0;
+  }
+
+  /* Card padding adjustments */
+  .ant-card .ant-card-body {
+    padding: 16px;
+  }
+
+  /* Form label sizing */
+  .ant-form-item .ant-form-item-label > label {
+    font-size: 13px;
+  }
+
+  /* Statistic adjustments */
+  .ant-statistic .ant-statistic-content-value {
+    font-size: 24px !important;
+  }
+
+  /* Select dropdown full width */
+  .ant-select-dropdown {
+    max-width: calc(100vw - 32px) !important;
+  }
+
+  /* Message popups */
+  .ant-message {
+    top: auto !important;
+    bottom: 24px !important;
+  }
+
+  /* Popconfirm adjustment */
+  .ant-popover {
+    max-width: calc(100vw - 32px) !important;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .ant-card .ant-card-body {
+    padding: 20px;
+  }
+
+  .ant-statistic .ant-statistic-content-value {
+    font-size: 28px !important;
+  }
+}
+
+/* ─── Smooth transitions for interactive elements ────────────────────────── */
+.ant-btn {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.ant-card {
+  transition: box-shadow 0.2s ease, border-color 0.2s ease !important;
+}
+
+/* ─── Touch-friendly improvements ────────────────────────────────────────── */
+@media (hover: none) and (pointer: coarse) {
+  /* Larger touch targets */
+  .ant-btn {
+    min-height: 40px;
+  }
+
+  .ant-table-tbody > tr > td .ant-btn {
+    min-height: 36px;
+    padding: 4px 12px !important;
+  }
+
+  /* Prevent text selection on interactive elements */
+  button,
+  [role="button"] {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* ─── Safe area padding for notched devices ──────────────────────────────── */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .admin-sidebar-backdrop + aside {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
