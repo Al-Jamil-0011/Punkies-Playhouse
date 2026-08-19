@@ -811,11 +811,11 @@ function GamesSection() {
             </Col>
           </Row>
           <Row gutter={16}>
-            <Col xs={12} sm={8}>
+            {/* <Col xs={12} sm={8}>
               <Form.Item name="emoji" label="Emoji Icon">
                 <AntInput style={{ fontSize: 20 }} />
               </Form.Item>
-            </Col>
+            </Col> */}
             <Col xs={12} sm={16}>
               <Form.Item label="Logo Upload">
                 <Upload accept="image/*" maxCount={1}>
