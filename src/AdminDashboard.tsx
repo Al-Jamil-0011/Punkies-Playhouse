@@ -689,6 +689,7 @@ export default function AdminDashboard() {
   const [section, setSection] = useState<NavSection>('dashboard')
   const [posts, setPosts] = useState<Post[]>(INIT_POSTS)
   const [submissions, setSubmissions] = useState<ContactSubmission[]>(INIT_SUBMISSIONS)
+  const [hoveredNav, setHoveredNav] = useState<NavSection | null>(null)
   const totalUnread = submissions.filter(s => s.unread).length
 
   return (
@@ -701,7 +702,7 @@ export default function AdminDashboard() {
             <img src={punkiesLogo} alt="Punkies Playhouse" className="w-full h-full object-cover" />
           </div>
           <div>
-            <p className="text-xs font-bold leading-tight text-white" style={{ fontFamily: F_HEAD, fontSize: 18 }}>Punkies Playhouse</p>
+            <p className="text-xs leading-normal text-white" style={{ fontFamily: F_HEAD, fontSize: 18 }}>Punkies Playhouse</p>
             {/* <div className="h-5 mt-0.5">
               <img src={defaiLogo} alt="DEFai" className="h-full w-auto object-contain" />
             </div> */}
@@ -717,14 +718,16 @@ export default function AdminDashboard() {
               <button
                 key={item.id}
                 onClick={() => setSection(item.id)}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left cursor-pointer transition-all active:scale-95"
+                onMouseEnter={() => setHoveredNav(item.id)}
+                onMouseLeave={() => setHoveredNav(null)}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left cursor-pointer transition-all"
                 style={{
-                  background: isActive ? 'linear-gradient(135deg, rgba(255,61,138,0.2) 0%, rgba(168,85,247,0.2) 100%)' : 'transparent',
-                  border: isActive ? '1px solid rgba(168,85,247,0.3)' : '1px solid transparent',
+                  background: (isActive || hoveredNav === item.id) ? 'linear-gradient(135deg, rgba(255,61,138,0.2) 0%, rgba(168,85,247,0.2) 100%)' : 'transparent',
+                  border: (isActive || hoveredNav === item.id) ? '1px solid rgba(168,85,247,0.3)' : '1px solid transparent',
                 }}
               >
                 <span className="text-lg w-7 text-center">{item.icon}</span>
-                <span className="flex-1 text-sm font-semibold" style={{ color: isActive ? '#fff' : '#9D8FC0', fontFamily: F_BODY }}>{item.label}</span>
+                <span className="flex-1 text-sm font-semibold" style={{ color: (isActive || hoveredNav === item.id) ? '#fff' : '#9D8FC0', fontFamily: F_BODY }}>{item.label}</span>
                 {hasBadge && (
                   <span className="w-5 h-5 rounded-full text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0" style={{ background: '#FF3D8A' }}>
                     {totalUnread}
